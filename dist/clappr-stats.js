@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "1a1f3a59b22791e4b4a0";
+/******/ 	var hotCurrentHash = "e7ece1248b638562d1d8";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -1814,6 +1814,27 @@ var ClapprStats = function (_ContainerPlugin) {
   _inherits(ClapprStats, _ContainerPlugin);
 
   _createClass(ClapprStats, [{
+    key: '_uuid',
+    value: function _uuid() {
+      var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+      var uuid = [];
+
+      // rfc4122 requires these characters
+      uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+      uuid[14] = '4';
+
+      // Fill in random data.  At i==19 set the high bits of clock sequence as
+      // per rfc4122, sec. 4.1.5
+      for (var i = 0; i < 36; i++) {
+        if (!uuid[i]) {
+          var r = 0 | Math.random() * 16;
+          uuid[i] = chars[i == 19 ? r & 0x3 | 0x8 : r];
+        }
+      }
+
+      return uuid.join('');
+    }
+  }, {
     key: '_now',
     value: function _now() {
       var hasPerformanceSupport = window.performance && typeof window.performance.now === 'function';
@@ -1928,7 +1949,10 @@ var ClapprStats = function (_ContainerPlugin) {
         beforeLast.time = now - beforeLast.start;
       }
 
-      this._metrics.extra.bitratesHistory.push({ start: this._now(), bitrate: bitrate });
+      this._metrics.extra.bitratesHistory.push({
+        start: this._now(),
+        bitrate: bitrate
+      });
 
       this._inc('changeLevel');
     }
@@ -2041,17 +2065,41 @@ var ClapprStats = function (_ContainerPlugin) {
     key: '_newMetrics',
     value: function _newMetrics() {
       this._metrics = {
+        id: this._uuid(),
         counters: {
-          play: 0, pause: 0, error: 0, buffering: 0, decodedFrames: 0, droppedFrames: 0,
-          fps: 0, changeLevel: 0, seek: 0, fullscreen: 0, dvrUsage: 0
+          play: 0,
+          pause: 0,
+          error: 0,
+          buffering: 0,
+          decodedFrames: 0,
+          droppedFrames: 0,
+          fps: 0,
+          changeLevel: 0,
+          seek: 0,
+          fullscreen: 0,
+          dvrUsage: 0
         },
         timers: {
-          startup: 0, watch: 0, pause: 0, buffering: 0, session: 0, latency: 0
+          startup: 0,
+          watch: 0,
+          pause: 0,
+          buffering: 0,
+          session: 0,
+          latency: 0
         },
         extra: {
-          playbackName: '', playbackType: '', bitratesHistory: [], bitrateWeightedMean: 0,
-          bitrateMostUsed: 0, buffersize: 0, watchHistory: [], watchedPercentage: 0,
-          bufferingPercentage: 0, bandwidth: 0, duration: 0, currentTime: 0
+          playbackName: '',
+          playbackType: '',
+          bitratesHistory: [],
+          bitrateWeightedMean: 0,
+          bitrateMostUsed: 0,
+          buffersize: 0,
+          watchHistory: [],
+          watchedPercentage: 0,
+          bufferingPercentage: 0,
+          bandwidth: 0,
+          duration: 0,
+          currentTime: 0
         }
       };
     }
@@ -2091,9 +2139,9 @@ var ClapprStats = function (_ContainerPlugin) {
       // flashls ??? - hls.droppedFramesl hls.stream.bufferLength (seconds)
       // hls ??? (use the same?)
       var fetchFPS = {
-        'html5_video': this._html5FetchFPS,
-        'hls': this._html5FetchFPS,
-        'dash_shaka_playback': this._html5FetchFPS
+        html5_video: this._html5FetchFPS,
+        hls: this._html5FetchFPS,
+        dash_shaka_playback: this._html5FetchFPS
       };
 
       fetchFPS[this._playbackName] && fetchFPS[this._playbackName].call(this);

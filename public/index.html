@@ -1,31 +1,56 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>clappr</title>
   </head>
   <body>
     <div id="player"></div>
     <script type="text/javascript" charset="utf-8">
-      window.onload = function() {
-        Clappr.Log.setLevel(Clappr.Log.LEVEL_INFO);
+      var player = null
+      var metricsReceivedCount = 0
 
-        window.player = new Clappr.Player({
+      function destroyerPlayer() {
+        if (!player) return
+        console.log('destroyerPlayer')
+        player.destroy()
+      }
+
+      function createPlayer() {
+        console.log('Create player')
+        destroyerPlayer()
+
+        player = new Clappr.Player({
           parentId: '#player',
-          plugins: [ClapprStats, DashShakaPlayback, LevelSelector],
-          //source: '//storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd', //
-          // source: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
-          source: 'http://clappr.io/highline.mp4',
-          //source: 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8',
-          clapprStats: { onCompletion: [5, 20, 50, 70, 100] },
+          plugins: [ClapprStats, DashShakaPlayback, LevelSelector, ClapprErrorRetryPlugin],
+          source: 'https://egress.eventials.com/61hr4v8t41owz7t1/index.m3u8',
+          clapprStats: {
+            runEach: 5 * 1000,
+            onReport: function (metrics) {
+              metricsReceivedCount++
+              if (metricsReceivedCount % 2 == 0) {
+                console.log('report', metrics)
+              }
+            },
+          },
+          autoPlay: true,
           height: 360,
-          width: 640
+          width: 640,
         })
+      }
+
+      window.onload = function () {
+        Clappr.Log.setLevel(Clappr.Log.LEVEL_INFO)
+
+        createPlayer()
+        setTimeout(() => createPlayer(), 30000)
       }
     </script>
     <script src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/clappr.level-selector/latest/level-selector.min.js"></script>
     <script src="https://cdn.jsdelivr.net/clappr.dash-shaka-playback/latest/dash-shaka-playback.js"></script>
+    <script src="https://static.eventials.com/clappr/assets/clappr-error-retry-plugin.ad3292cc6d0dac39429b.js"></script>
+
     <script type="text/javascript" charset="utf-8" src="/latest/clappr-stats.js"></script>
   </body>
 </html>
